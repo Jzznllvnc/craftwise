@@ -1,24 +1,13 @@
 <?php
 
-// Database connection details
-// For security, ideally these would come from environment variables (.env file)
-// For local XAMPP setup, these are typically:
-// DB_HOST = 'localhost'
-// DB_NAME = 'pcbuild_db'
-// DB_USER = 'root'
-// DB_PASS = '' (empty for default XAMPP root user)
+require_once BASE_PATH . 'config/env.php';
 
-// Use a fallback for environment variables, common practice is to load them
-// For now, let's define them directly for simplicity.
-// In a real production setup, you would load these from a .env file using a library like Dotenv.
+loadEnv();
 
-// For demonstration purposes, define directly.
-// IMPORTANT: In a production environment, NEVER hardcode credentials like this.
-// Use environment variables or a proper config management system.
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'pcbuild_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_HOST', env('DB_HOST', 'localhost'));
+define('DB_NAME', env('DB_NAME', 'pcbuild_db'));
+define('DB_USER', env('DB_USER', 'root'));
+define('DB_PASS', env('DB_PASS', ''));
 
 try {
     // Create a new PDO instance

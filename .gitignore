@@ -1,6 +1,3 @@
-# AI Chat
-app/controllers/AiChatController.php
-
 # htaccess
 .htaccess
 
@@ -13,7 +10,8 @@ markdown/google_oauth_setup.md
 
 #production (infinityfree - craftwise.ct.ws)
 .htaccess.production
-config/index.production.php
-config/database.production.php
-config/google_oauth.production.php
-config/google_oauth.php
+
+# environment secrets
+.env
+.env.*
+!.env.example

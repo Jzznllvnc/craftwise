@@ -106,6 +106,7 @@ class GoogleOAuthHelper
     {
         return !empty($this->clientId) && 
                !empty($this->clientSecret) && 
-               $this->clientId !== 'YOUR_GOOGLE_CLIENT_ID_HERE';
+               strpos($this->clientId, 'your-') !== 0 &&
+               strpos($this->clientSecret, 'your-') !== 0;
     }
 }
