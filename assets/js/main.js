@@ -718,61 +718,50 @@ function initializeAiChat() {
     const aiChatSidebar = document.getElementById('ai-chat-sidebar');
     const closeChatSidebarButton = document.getElementById('close-chat-sidebar');
     const newChatButton = document.getElementById('new-chat-button');
-    const chatContentPlaceholder = document.getElementById('ai-chat-content-placeholder');
     const body = document.body;
 
-    async function loadInitialChatContent() {
-        try {
-            const response = await fetch(BASE_URL + '/ai-chat-content');
-            const htmlContent = await response.text();
-
-            if (response.ok) {
-                chatContentPlaceholder.innerHTML = htmlContent;
-                chatMessages = document.getElementById('chat-messages');
-                userInput = document.getElementById('user-input');
-                sendButton = document.getElementById('send-button');
-                chatInputForm = document.getElementById('chat-input-form');
-                initialAiGreeting = document.getElementById('initial-ai-greeting');
-                initialChatHtmlContent = chatMessages.innerHTML;
-                if (chatHistory.length > 0) {
-                    if (initialAiGreeting) {
-                        initialAiGreeting.classList.add('hidden');
-                    }
-                    chatMessages.innerHTML = '';
-                    chatHistory.forEach(msg => appendMessage(msg.role, msg.text));
-                } else {
-                    if (initialAiGreeting) {
-                        initialAiGreeting.classList.remove('hidden');
-                    }
-                    const initialMessageTextForHistory = "Hello! I'm Kraft-E, your PC Build Assistant.\n\nAsk me anything about PC components, compatibility,\nor general build advice!"; //
-                    if (chatHistory.length === 0) {
-                        chatHistory.push({ role: "model", text: initialMessageTextForHistory });
-                    }
+    function initializeChatElements() {
+        chatMessages = document.getElementById('chat-messages');
+        userInput = document.getElementById('user-input');
+        sendButton = document.getElementById('send-button');
+        chatInputForm = document.getElementById('chat-input-form');
+        initialAiGreeting = document.getElementById('initial-ai-greeting');
+        
+        if (chatMessages) {
+            initialChatHtmlContent = chatMessages.innerHTML;
+            
+            if (chatHistory.length > 0) {
+                if (initialAiGreeting) {
+                    initialAiGreeting.classList.add('hidden');
                 }
-                if (chatInputForm) {
-                    chatInputForm.addEventListener('submit', (e) => {
+                chatMessages.innerHTML = '';
+                chatHistory.forEach(msg => appendMessage(msg.role, msg.text));
+            } else {
+                if (initialAiGreeting) {
+                    initialAiGreeting.classList.remove('hidden');
+                }
+                const initialMessageTextForHistory = "Hello! I'm Kraft-E, your PC Build Assistant.\n\nAsk me anything about PC components, compatibility,\nor general build advice!";
+                if (chatHistory.length === 0) {
+                    chatHistory.push({ role: "model", text: initialMessageTextForHistory });
+                }
+            }
+            
+            if (chatInputForm) {
+                chatInputForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    sendMessage();
+                });
+            } else if (sendButton && userInput) {
+                sendButton.addEventListener('click', sendMessage);
+                userInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
                         e.preventDefault();
                         sendMessage();
-                    });
-                } else if (sendButton && userInput) {
-                    sendButton.addEventListener('click', sendMessage);
-                    userInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            sendMessage();
-                        }
-                    });
-                }
-
-                if (chatMessages) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-
-            } else {
-                chatContentPlaceholder.innerHTML = `<p class="text-center text-red-600 py-8">Failed to load AI Chat content.</p>`;
+                    }
+                });
             }
-        } catch (error) {
-            alertMessage('error', 'Could not connect to the AI assistant.');
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     }
 
@@ -800,7 +789,7 @@ function initializeAiChat() {
         }
     }
 
-    loadInitialChatContent();
+    initializeChatElements();
 
     if (aiChatFab) {
         aiChatFab.addEventListener('click', () => {
@@ -888,11 +877,12 @@ async function sendMessage() {
     sendButton.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
-        const response = await fetch(BASE_URL + '/ai-chat/api', {
+        const response = await fetch(BASE_URL + '/chat-submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'same-origin',
             body: JSON.stringify({ prompt: prompt, history: chatHistory }),
         });
 

@@ -166,7 +166,7 @@ class Router
 
         // AI Chat Routes
         $this->get('/ai-chat-content', 'AiChatController@getChatContent'); // Route to fetch ONLY chat content for the pop-up
-        $this->post('/ai-chat/api', 'AiChatController@chatApi');  // API endpoint for AI chat requests
+        $this->post('/chat-submit', 'AiChatController@chatApi');  // AI chat message submission
 
         // Build Rate Routes
         $this->get('/build-rate', 'BuildController@index'); // Display the build rating interface

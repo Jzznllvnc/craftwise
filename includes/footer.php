@@ -85,7 +85,7 @@
             </div>
         </div>
         <div id="ai-chat-content-placeholder">
-            <div class="text-center text-gray-500 py-8">Loading AI Chat...</div>
+            <?php require_once BASE_PATH . 'app/views/ai_chat/index.php'; ?>
         </div>
     </div>
 
