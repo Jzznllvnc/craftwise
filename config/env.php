@@ -2,13 +2,20 @@
 
 function loadEnv(?string $path = null): void
 {
-    $envPath = $path ?? dirname(BASE_PATH) . DIRECTORY_SEPARATOR . '.env';
+    $paths = $path !== null
+        ? [$path]
+        : [BASE_PATH . '.env', dirname(BASE_PATH) . DIRECTORY_SEPARATOR . '.env'];
 
-    if (!is_readable($envPath)) {
-        $envPath = BASE_PATH . '.env';
+    $envPath = null;
+
+    foreach ($paths as $candidatePath) {
+        if (isPathAllowedByOpenBaseDir($candidatePath) && is_readable($candidatePath)) {
+            $envPath = $candidatePath;
+            break;
+        }
     }
 
-    if (!is_readable($envPath)) {
+    if ($envPath === null) {
         return;
     }
 
@@ -46,6 +53,46 @@ function loadEnv(?string $path = null): void
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
     }
+}
+
+function isPathAllowedByOpenBaseDir(string $path): bool
+{
+    $openBaseDir = ini_get('open_basedir');
+
+    if ($openBaseDir === false || trim($openBaseDir) === '') {
+        return true;
+    }
+
+    $normalizedPath = normalizePathForOpenBaseDir($path);
+    $directories = explode(PATH_SEPARATOR, $openBaseDir);
+
+    foreach ($directories as $directory) {
+        $directory = trim($directory);
+
+        if ($directory === '') {
+            continue;
+        }
+
+        if ($directory === '.') {
+            $directory = getcwd() ?: $directory;
+        }
+
+        $normalizedDirectory = normalizePathForOpenBaseDir($directory);
+
+        if ($normalizedPath === $normalizedDirectory || strpos($normalizedPath, $normalizedDirectory . DIRECTORY_SEPARATOR) === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function normalizePathForOpenBaseDir(string $path): string
+{
+    $realPath = realpath($path);
+    $path = $realPath !== false ? $realPath : $path;
+
+    return rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path), DIRECTORY_SEPARATOR);
 }
 
 function env(string $key, $default = null)

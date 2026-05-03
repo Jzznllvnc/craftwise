@@ -134,6 +134,7 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <script src="<?php echo BASE_URL; ?>/assets/js/main.js"></script>
+    <script src="<?php echo BASE_URL; ?>/assets/js/main.js?v=<?php echo filemtime(BASE_PATH . 'assets/js/main.js'); ?>"></script>
+
 </body>
 </html>

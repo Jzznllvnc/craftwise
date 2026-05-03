@@ -33,13 +33,15 @@ class AiChatController extends BaseController
         $input = file_get_contents('php://input');
         $data = json_decode($input, true);
 
+        if (!is_array($data)) {
+            $this->jsonError('Invalid chat request payload.', 400);
+        }
+
         $userPrompt = $data['prompt'] ?? '';
         $chatHistory = $data['history'] ?? [];
 
         if (empty($userPrompt)) {
-            echo json_encode(['error' => 'No prompt provided.']);
-            http_response_code(400);
-            exit();
+            $this->jsonError('No prompt provided.', 400);
         }
 
         $contents = [];
@@ -62,9 +64,11 @@ class AiChatController extends BaseController
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash');
 
         if (empty($apiKey)) {
-            echo json_encode(['error' => 'AI service is not configured.']);
-            http_response_code(500);
-            exit();
+            $this->jsonError('AI service is not configured. Please set GEMINI_API_KEY on the server.', 500);
+        }
+
+        if (!function_exists('curl_init')) {
+            $this->jsonError('PHP cURL extension is not available on this hosting account.', 500);
         }
 
         $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
@@ -76,6 +80,7 @@ class AiChatController extends BaseController
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'CraftWise-AI-Chat/1.0');
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -83,30 +88,38 @@ class AiChatController extends BaseController
         curl_close($ch);
 
         if ($curlError) {
-            echo json_encode(['error' => 'Failed to connect to AI service: ' . $curlError]);
-            http_response_code(500);
-            exit();
+            error_log('CraftWise AI cURL error: ' . $curlError);
+            $this->jsonError('Failed to connect to AI service: ' . $curlError, 500);
         }
 
         $apiResponse = json_decode($response, true);
 
+        if ($apiResponse === null && json_last_error() !== JSON_ERROR_NONE) {
+            error_log('CraftWise AI invalid response: HTTP ' . $httpCode . ' body: ' . substr((string)$response, 0, 500));
+            $this->jsonError('AI Service returned an invalid response.', 502);
+        }
+
         if ($httpCode !== 200) {
             $errorMessage = $apiResponse['error']['message'] ?? 'Unknown API error.';
-            echo json_encode(['error' => 'AI Service error: ' . $errorMessage]);
-            http_response_code($httpCode);
-            exit();
+            error_log('CraftWise AI HTTP error ' . $httpCode . ': ' . $errorMessage);
+            $this->jsonError('AI Service error: ' . $errorMessage, $httpCode);
         }
 
         $aiText = '';
         if (isset($apiResponse['candidates'][0]['content']['parts'][0]['text'])) {
             $aiText = $apiResponse['candidates'][0]['content']['parts'][0]['text'];
         } else {
-            echo json_encode(['error' => 'AI Service returned an unexpected response.']);
-            http_response_code(500);
-            exit();
+            $this->jsonError('AI Service returned an unexpected response.', 500);
         }
 
         echo json_encode(['response' => $aiText]);
+        exit();
+    }
+
+    private function jsonError(string $message, int $statusCode): void
+    {
+        http_response_code($statusCode);
+        echo json_encode(['error' => $message]);
         exit();
     }
 }

@@ -13,11 +13,13 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Define the base path of your application
 define('BASE_PATH', __DIR__ . DIRECTORY_SEPARATOR);
+require_once BASE_PATH . 'config/env.php';
+loadEnv();
 
 // Define the base URL for links (adjust based on your environment)
 // For local development in a subdirectory: '/pcbuild'
 // For production at domain root: ''
-define('BASE_URL', '/pcbuild');
+define('BASE_URL', rtrim(env('APP_BASE_URL', '/pcbuild'), '/'));
 
 // Include necessary files
 require_once BASE_PATH . 'config/database.php'; // Your database connection
@@ -50,7 +52,7 @@ $router = new Router();
 $router->defineRoutes(); // Call the new method to define all routes
 
 // Dispatch the request
-$requestUri = $_SERVER['REQUEST_URI'];
+$requestUri = isset($_GET['route']) ? '/' . trim($_GET['route'], '/') : $_SERVER['REQUEST_URI'];
 $requestMethod = $_SERVER['REQUEST_METHOD'];
 
 // DEBUG: Uncomment to see routing info

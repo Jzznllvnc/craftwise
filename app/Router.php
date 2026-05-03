@@ -116,7 +116,7 @@ class Router
         }
 
         // 2. Remove the base path prefix
-        $basePath = '/pcbuild'; // This must match your server's subdirectory
+        $basePath = defined('BASE_URL') ? BASE_URL : '/pcbuild'; // This must match your server's subdirectory
         if (strpos($path, $basePath) === 0) {
             $path = substr($path, strlen($basePath));
         }

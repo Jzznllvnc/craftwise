@@ -819,6 +819,7 @@ function initializeAiChat() {
         if (aiChatSidebar && aiChatFab && aiChatSidebar.classList.contains('open') &&
             !aiChatSidebar.contains(event.target) &&
             !aiChatFab.contains(event.target)) {
+
             aiChatSidebar.classList.remove('open');
             body.classList.remove('ai-chat-open');
         }
@@ -838,10 +839,13 @@ function appendMessage(role, text) {
     avatar.textContent = role === 'user' ? 'You' : 'AI';
 
     const textBubble = document.createElement('div');
-    textBubble.className = `p-3 rounded-lg max-w-[80%] shadow-sm ${role === 'user' ? 'bg-[--color-primary-orange] text-white ml-auto' : 'bg-gray-200 text-gray-800 mr-auto'} markdown-content`;
+    textBubble.className = role === 'user' ? 'user-message min-w-0' : 'ai-message min-w-0';
 
     if (role === 'model') {
-        textBubble.innerHTML = marked.parse(text);
+        const markdownWrapper = document.createElement('div');
+        markdownWrapper.className = 'markdown-content';
+        markdownWrapper.innerHTML = marked.parse(text);
+        textBubble.appendChild(markdownWrapper);
     } else {
         textBubble.textContent = text;
     }
@@ -877,7 +881,7 @@ async function sendMessage() {
     sendButton.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
-        const response = await fetch(BASE_URL + '/chat-submit', {
+        const response = await fetch(BASE_URL + '/index.php?route=/chat-submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -886,17 +890,25 @@ async function sendMessage() {
             body: JSON.stringify({ prompt: prompt, history: chatHistory }),
         });
 
-        const data = await response.json();
+        const responseText = await response.text();
+        let data = {};
+
+        try {
+            data = responseText ? JSON.parse(responseText) : {};
+        } catch (parseError) {
+            throw new Error(`Chat endpoint returned a non-JSON response (${response.status}). Check the live /chat-submit route and .htaccess rewrite rules.`);
+        }
 
         if (response.ok) {
             const aiResponse = data.response;
             appendMessage('model', aiResponse);
             chatHistory.push({ role: "model", text: aiResponse });
         } else {
-            alertMessage('error', `AI Service error: ${data.error || 'Something went wrong.'}`);
+            throw new Error(data.error || `AI Service request failed (${response.status}).`);
         }
     } catch (error) {
-        alertMessage('error', 'Could not connect to the AI assistant.');
+        console.error('AI chat request failed:', error);
+        alertMessage('error', error.message ? `Could not connect to the AI assistant: ${error.message}` : 'Could not connect to the AI assistant.');
     } finally {
         sendButton.disabled = false;
         sendButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>`;

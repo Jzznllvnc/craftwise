@@ -73,6 +73,9 @@
     margin-left: auto;
     box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
     animation: slideInRight 0.3s ease-out;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .ai-message {
@@ -85,11 +88,18 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     animation: slideInLeft 0.3s ease-out;
     word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .ai-message .markdown-content {
     color: #1f2937;
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
 }
 
 .ai-message .markdown-content strong {
@@ -103,6 +113,8 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.9em;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .ai-message .markdown-content pre {
@@ -113,6 +125,7 @@
     overflow-x: auto;
     margin: 8px 0;
     max-width: 100%;
+    box-sizing: border-box;
 }
 
 .ai-message .markdown-content table {
@@ -120,13 +133,17 @@
     max-width: 100%;
     overflow-x: auto;
     border-collapse: collapse;
+    box-sizing: border-box;
+    font-size: 0.875rem;
 }
 
 .ai-message .markdown-content td,
 .ai-message .markdown-content th {
     word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
     max-width: 200px;
+    white-space: normal;
 }
 
 .ai-message .markdown-content ul {
